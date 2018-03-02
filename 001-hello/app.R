@@ -22,7 +22,7 @@ ui <- fluidPage(
     ),
     selectInput(inputId = "dataset",
                 label = "dataset",
-                choices =c("faithful","iris"),
+                choices =c("faithful","iris")
     )
 
   ),
@@ -30,9 +30,22 @@ ui <- fluidPage(
   mainPanel(
 
     # Output: Histogram ----
-    plotOutput(outputId = "distPlot"),
+    #plotOutput(outputId = "distPlot"),
 
-    verbatimTextOutput("range")
+    #verbatimTextOutput("range"),
+
+     # Output: Tabset w/ plot, summary, and table ----
+    tabsetPanel(type = "tabs",
+                tabPanel("Histogram", plotOutput(outputId = "distPlot")),
+                tabPanel("Range", verbatimTextOutput("range")),
+                numericInput(inputId="calculate",
+                             label="Plus/Minus x",
+                             value=5,
+                             min= 0,
+                             max = 10,
+                             step = 1),
+                verbatimTextOutput("range")
+    )
 
   )
 )
@@ -62,8 +75,15 @@ server <- function(input, output) {
 
 
   })
+calcRange<-eventReactive(input$calculate,{
+  calculate<-input$calculate
+  range<-range(dataInput()$data)
+  number1<-range[1]-calculate
+  number2<-range[2]+calculate
+  return(c(number1,number2,calculate))
+})
 
-  output$distPlot <- renderPlot({
+output$distPlot <- renderPlot({
     x<-dataInput()$data
     bins<-dataInput()$bins
     xlab<-dataInput()$xlab
@@ -74,7 +94,7 @@ server <- function(input, output) {
          xlab = xlab,
          main = main)
   })
-output$range<-renderPrint({range(dataInput()$data)})
+output$range<-renderPrint({calcRange()})
 }
 
 # Create Shiny app ----
