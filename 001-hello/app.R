@@ -4,7 +4,7 @@ library(shiny)
 ui <- fluidPage(
 
   # App title ----
-  titlePanel("Hello Shiny!"),
+  titlePanel("My first Shiny App!"),
 
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -20,16 +20,21 @@ ui <- fluidPage(
                   value = 30)
 
     ),
-
-    # Main panel for displaying outputs ----
-    mainPanel(
-
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
-
+    selectInput(inputId = "dataset",
+                label = "dataset",
+                choices =c("faithful","iris"),
     )
+
+  ),
+  # Main panel for displaying outputs ----
+  mainPanel(
+
+    # Output: Histogram ----
+    plotOutput(outputId = "distPlot")
+
   )
 )
+
 
 # Define server logic required to draw a histogram ----
 server <- function(input, output) {
@@ -43,15 +48,23 @@ server <- function(input, output) {
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
   output$distPlot <- renderPlot({
+    if (input$dataset=="faithful"){
+      x    <- faithful$waiting
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
 
-    x    <- faithful$waiting
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+      hist(x, breaks = bins, col = "#75AADB", border = "white",
+           xlab = "Waiting time to next eruption (in mins)",
+           main = "Histogram of waiting times")
+    }
+    else{
+      x    <-iris$Sepal.Length
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
 
-    hist(x, breaks = bins, col = "#75AADB", border = "white",
-         xlab = "Waiting time to next eruption (in mins)",
-         main = "Histogram of waiting times")
-
-    })
+      hist(x, breaks = bins, col = "#75AADB", border = "white",
+           xlab = "Sepal Length",
+           main = "Histogram of Sepal Length")
+    }
+  })
 
 }
 
