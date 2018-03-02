@@ -30,7 +30,9 @@ ui <- fluidPage(
   mainPanel(
 
     # Output: Histogram ----
-    plotOutput(outputId = "distPlot")
+    plotOutput(outputId = "distPlot"),
+
+    verbatimTextOutput("range")
 
   )
 )
@@ -47,26 +49,34 @@ server <- function(input, output) {
   # 1. It is "reactive" and therefore should be automatically
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
-  output$distPlot <- renderPlot({
-    if (input$dataset=="faithful"){
-      x    <- faithful$waiting
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
 
-      hist(x, breaks = bins, col = "#75AADB", border = "white",
-           xlab = "Waiting time to next eruption (in mins)",
-           main = "Histogram of waiting times")
-    }
-    else{
-      x    <-iris$Sepal.Length
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+  dataInput <- reactive({
+    data <- switch(input$dataset,
+                   "faithful" = faithful$waiting,
+                   "iris" = iris$Sepal.Length)
+    bins <- input$bins
+    xlab<- ifelse(input$dataset=="faithful","Waiting time to next eruption (in mins)","Sepal Length")
+    main<-ifelse(input$dataset=="faithful","Histogram of waiting times","Histogram of Sepal Length")
 
-      hist(x, breaks = bins, col = "#75AADB", border = "white",
-           xlab = "Sepal Length",
-           main = "Histogram of Sepal Length")
-    }
+    return(list(data=data,bins=bins,xlab=xlab,main=main))
+
+
   })
 
+  output$distPlot <- renderPlot({
+    x<-dataInput()$data
+    bins<-dataInput()$bins
+    xlab<-dataInput()$xlab
+    main<-dataInput()$main
+    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+
+    hist(x, breaks = bins, col = "#75AADB", border = "white",
+         xlab = xlab,
+         main = main)
+  })
+output$range<-renderPrint({range(dataInput()$data)})
 }
 
 # Create Shiny app ----
 shinyApp(ui = ui, server = server)
+
